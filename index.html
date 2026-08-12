@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Daily Ledger</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --paper: #F1EFE3;
+    --paper-line: #DAD6C4;
+    --ink: #223047;
+    --ink-soft: #57667E;
+    --brass: #B5842A;
+    --brass-soft: #E4D3AC;
+    --sage: #667A5D;
+    --sage-soft: #DEE6D6;
+    --red-stamp: #A23B2E;
+    --card: #FBFAF4;
+    --radius: 3px;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin: 0;
+    min-height: 100vh;
+    background: var(--paper);
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px);
+    background-size: 100% 42px;
+    background-position: 0 132px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--ink);
+    padding: 48px 20px 100px;
+  }
+
+  .sheet{
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  header{
+    padding-bottom: 24px;
+    margin-bottom: 8px;
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+  }
+
+  h1{
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-optical-sizing: auto;
+    font-size: 34px;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  .subtitle{
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 6px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .date-stamp{
+    font-size: 12px;
+    color: var(--ink-soft);
+    text-align: right;
+    line-height: 1.6;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+
+  .entry-form{
+    display: flex;
+    gap: 10px;
+    margin: 28px 0 30px;
+  }
+
+  .entry-form input[type="text"]{
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    color: var(--ink);
+  }
+
+  .entry-form input[type="text"]::placeholder{
+    color: #A6A28E;
+  }
+
+  .entry-form input[type="text"]:focus{
+    outline: none;
+    border-color: var(--brass);
+    box-shadow: 0 0 0 3px var(--brass-soft);
+  }
+
+  .entry-form button{
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: var(--radius);
+    padding: 0 22px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .entry-form button:hover{ background: #16202F; }
+  .entry-form button:active{ transform: translateY(1px); }
+
+  .tally{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .filters{
+    display: flex;
+    gap: 4px;
+  }
+
+  .filters button{
+    background: none;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    color: var(--ink-soft);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+
+  .filters button:hover{ color: var(--ink); }
+
+  .filters button.active{
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  ul.entries{
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+  }
+
+  li.entry{
+    display: grid;
+    grid-template-columns: 34px 30px 1fr auto;
+    align-items: start;
+    gap: 4px 12px;
+    padding: 14px 6px;
+    border-bottom: 1px dashed var(--paper-line);
+  }
+
+  li.entry .num{
+    font-size: 12px;
+    color: #A6A28E;
+    padding-top: 3px;
+    text-align: right;
+  }
+
+  .stamp{
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--ink);
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    padding: 0;
+  }
+
+  .stamp::after{
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: var(--red-stamp);
+    transform: scale(0);
+    transition: transform 0.14s ease;
+  }
+
+  li.entry.done .stamp{ border-color: var(--red-stamp); }
+  li.entry.done .stamp::after{ transform: scale(1); }
+
+  .entry-text{
+    font-size: 14.5px;
+    line-height: 1.55;
+    padding-top: 2px;
+    word-break: break-word;
+  }
+
+  li.entry.done .entry-text{
+    color: var(--ink-soft);
+    text-decoration: line-through;
+    text-decoration-color: var(--red-stamp);
+    text-decoration-thickness: 1.5px;
+  }
+
+  .remove-btn{
+    background: none;
+    border: none;
+    color: #B7B2A0;
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+  }
+
+  .remove-btn:hover{ color: var(--red-stamp); }
+
+  .empty{
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-soft);
+  }
+
+  .empty .mark{
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    color: var(--ink);
+    margin-bottom: 8px;
+    font-style: italic;
+  }
+
+  .empty p{
+    font-size: 13px;
+    margin: 0;
+  }
+
+  footer{
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--paper-line);
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-align: center;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 480px){
+    h1{ font-size: 26px; }
+    header{ flex-direction: column; align-items: flex-start; gap: 10px; }
+    .date-stamp{ text-align: left; }
+    li.entry{ grid-template-columns: 24px 26px 1fr auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <header>
+    <div>
+      <h1>The Daily Ledger</h1>
+      <div class="subtitle">A record of things to be done</div>
+    </div>
+    <div class="date-stamp" id="dateStamp"></div>
+  </header>
+
+  <form class="entry-form" id="entryForm">
+    <input type="text" id="entryInput" placeholder="Enter an item for the record" autocomplete="off">
+    <button type="submit">File it</button>
+  </form>
+
+  <div class="tally">
+    <span id="tallyText">0 open, 0 closed</span>
+    <div class="filters" id="filters">
+      <button data-filter="all" class="active">All</button>
+      <button data-filter="open">Open</button>
+      <button data-filter="done">Closed</button>
+    </div>
+  </div>
+
+  <ul class="entries" id="entries"></ul>
+
+  <div class="empty" id="emptyState" style="display:none;">
+    <div class="mark">&mdash; nothing on file &mdash;</div>
+    <p>File your first item above.</p>
+  </div>
+
+  <footer>Struck entries remain on record, marked closed</footer>
+</div>
+
+<script>
+  let tasks = [];
+  let idCounter = 1;
+  let filter = 'all';
+
+  const entriesEl = document.getElementById('entries');
+  const emptyState = document.getElementById('emptyState');
+  const tallyText = document.getElementById('tallyText');
+  const entryForm = document.getElementById('entryForm');
+  const entryInput = document.getElementById('entryInput');
+  const filtersEl = document.getElementById('filters');
+  const dateStamp = document.getElementById('dateStamp');
+
+  function setDateStamp(){
+    const now = new Date();
+    const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    dateStamp.innerHTML = now.toLocaleDateString(undefined, opts).toUpperCase() +
+      '<br>ENTRY LOG';
+  }
+
+  function addTask(text){
+    tasks.push({ id: idCounter++, text: text, done: false });
+    render();
+  }
+
+  function toggleTask(id){
+    const t = tasks.find(function(t){ return t.id === id; });
+    if (t){ t.done = !t.done; render(); }
+  }
+
+  function removeTask(id){
+    tasks = tasks.filter(function(t){ return t.id !== id; });
+    render();
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function render(){
+    const visible = tasks.filter(function(t){
+      if (filter === 'open') return !t.done;
+      if (filter === 'done') return t.done;
+      return true;
+    });
+
+    entriesEl.innerHTML = '';
+
+    if (visible.length === 0){
+      emptyState.style.display = 'block';
+    } else {
+      emptyState.style.display = 'none';
+      visible.forEach(function(t, i){
+        const li = document.createElement('li');
+        li.className = 'entry' + (t.done ? ' done' : '');
+        li.innerHTML =
+          '<span class="num">' + String(i + 1).padStart(3, '0') + '</span>' +
+          '<button class="stamp" aria-label="Toggle done" data-id="' + t.id + '"></button>' +
+          '<span class="entry-text">' + escapeHtml(t.text) + '</span>' +
+          '<button class="remove-btn" aria-label="Remove entry" data-id="' + t.id + '">&times;</button>';
+        entriesEl.appendChild(li);
+      });
+    }
+
+    const openCount = tasks.filter(function(t){ return !t.done; }).length;
+    const doneCount = tasks.length - openCount;
+    tallyText.textContent = openCount + ' open, ' + doneCount + ' closed';
+  }
+
+  entryForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    const val = entryInput.value.trim();
+    if (val){
+      addTask(val);
+      entryInput.value = '';
+      entryInput.focus();
+    }
+  });
+
+  entriesEl.addEventListener('click', function(e){
+    const stampBtn = e.target.closest('.stamp');
+    if (stampBtn){
+      toggleTask(Number(stampBtn.dataset.id));
+      return;
+    }
+    const removeBtn = e.target.closest('.remove-btn');
+    if (removeBtn){
+      removeTask(Number(removeBtn.dataset.id));
+    }
+  });
+
+  filtersEl.addEventListener('click', function(e){
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    filter = btn.dataset.filter;
+    Array.from(filtersEl.querySelectorAll('button')).forEach(function(b){
+      b.classList.toggle('active', b === btn);
+    });
+    render();
+  });
+
+  setDateStamp();
+  render();
+</script>
+
+</body>
+</html>
